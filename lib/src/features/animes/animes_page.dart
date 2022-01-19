@@ -1,11 +1,10 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_valuenotifier/src/features/animes/models/anime_model.dart';
-import 'package:flutter_valuenotifier/src/features/animes/services/animes_service.dart';
 import 'package:flutter_valuenotifier/src/features/animes/states/anime_input_state.dart';
 import 'package:flutter_valuenotifier/src/features/animes/states/anime_state.dart';
 import 'package:flutter_valuenotifier/src/features/animes/stores/anime_store.dart';
 import 'package:flutter_valuenotifier/src/features/animes/stores/input_anime_store.dart';
+import 'package:flutter_valuenotifier/src/features/animes_info/animes_info_page.dart';
 import 'package:flutter_valuenotifier/src/shareds/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -17,9 +16,6 @@ class AnimePage extends StatefulWidget {
 }
 
 class _AnimePageState extends State<AnimePage> {
-  final store = AnimeStore(AnimeService(Dio()));
-  final inputStore = AnimeInputStore();
-
   @override
   void initState() {
     super.initState();
@@ -29,8 +25,8 @@ class _AnimePageState extends State<AnimePage> {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-    final store = context.watch<AnimeStore>();
-    final state = store.value;
+    final animeStore = context.watch<AnimeStore>();
+    final animeState = animeStore.value;
 
     return Scaffold(
       backgroundColor: Colors.blue,
@@ -51,12 +47,12 @@ class _AnimePageState extends State<AnimePage> {
             const SizedBox(height: 30),
             ComponentInputAnimeStore(
               functionOnChange: (value) {
-                store.nameAnimeSearch = value!;
+                animeStore.nameAnimeSearch = value!;
               },
-              functionSearch: store.fetchAnimes,
+              functionSearch: animeStore.fetchAnimes,
             ),
             const SizedBox(height: 30),
-            listAnimes(state),
+            listAnimes(animeState),
           ],
         ),
       ),
@@ -64,7 +60,6 @@ class _AnimePageState extends State<AnimePage> {
   }
 
   Widget listAnimes(AnimeState state) {
-    print(state);
     if (state is LoadingAnimeState) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -83,7 +78,12 @@ class _AnimePageState extends State<AnimePage> {
           itemBuilder: (_, index) {
             final anime = state.listAnimes[index];
             return Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.only(
+                left: 50,
+                right: 50,
+                top: 20,
+                bottom: 20,
+              ),
               child: cardAnime(anime),
             );
           },
@@ -95,58 +95,62 @@ class _AnimePageState extends State<AnimePage> {
   }
 
   Widget cardAnime(AnimeModel anime) {
-    final animeImage = anime.images!.jpg!.imageUrl;
+    final animeImage = anime.images!.jpg!.largeImageUrl;
 
-    TextStyle styleText = const TextStyle(color: Colors.white);
-    formatedText(value) => Text(
-          value,
-          style: styleText,
-          textAlign: TextAlign.justify,
-        );
-
-    return Card(
-      color: Colors.lightBlue,
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Column(
+    return GestureDetector(
+      onTap: () => CommonWidgets.changeScreen(
+        context: context,
+        screen: AnimeInfoPage(anime),
+      ),
+      child: Card(
+        elevation: 8,
+        color: Colors.lightBlue,
+        child: Stack(
+          alignment: AlignmentDirectional.bottomCenter,
           children: [
-            if (animeImage != null) ...{
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+            Padding(
+              padding: const EdgeInsets.all(4),
+              child: SizedBox(
+                height: 350,
+                width: 350,
                 child: Image.network(
-                  animeImage,
-                  width: 150,
+                  animeImage!,
+                  fit: BoxFit.cover,
                 ),
-              )
-            },
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Icon(
-                        Icons.star_rate,
-                        color: Colors.yellow,
-                      ),
-                      formatedText("${anime.score ?? 0}"),
-                      const SizedBox(width: 10),
-                      formatedText("Status: ${anime.status}"),
-                    ]),
-                formatedText("Tipo: ${anime.type}"),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.all(10),
-              child: formatedText(
-                "Nome: ${anime.title ?? anime.titleEnglish ?? anime.titleJapanese}",
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: infoAnime(anime),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+Widget infoAnime(AnimeModel anime) {
+  TextStyle styleText = const TextStyle(color: Colors.white);
+  formatedText(value) => Text(
+        value,
+        style: styleText,
+        textAlign: TextAlign.justify,
+      );
+
+  return Card(
+    color: Colors.black,
+    child: Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          child: formatedText(
+            anime.title ?? anime.titleEnglish ?? anime.titleJapanese,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class ComponentInputAnimeStore extends StatelessWidget {

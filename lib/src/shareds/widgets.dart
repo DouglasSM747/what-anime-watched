@@ -8,6 +8,15 @@ class CommonWidgets extends StatelessWidget {
     return Container();
   }
 
+  static changeScreen({required context, required Widget screen}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => screen,
+      ),
+    );
+  }
+
   static showAlertDialog(
     BuildContext context, {
     String title = "Alerta",
@@ -130,9 +139,9 @@ class CommonWidgets extends StatelessWidget {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.deepPurple[100]!,
-            spreadRadius: 10,
-            blurRadius: 20,
+            color: Colors.lightBlue[100]!,
+            spreadRadius: 5,
+            blurRadius: 15,
           ),
         ],
       ),
@@ -144,8 +153,9 @@ class CommonWidgets extends StatelessWidget {
         ),
         onPressed: callback,
         style: ElevatedButton.styleFrom(
-          primary: Colors.deepPurple,
-          onPrimary: Colors.white,
+          primary: Colors.orange,
+          onPrimary: Colors.black,
+          textStyle: const TextStyle(fontSize: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
