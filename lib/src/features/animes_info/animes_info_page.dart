@@ -6,23 +6,50 @@ import 'package:flutter_valuenotifier/src/shareds/widgets.dart';
 import 'package:provider/src/provider.dart';
 import 'package:translator/translator.dart';
 
-class AnimeInfoPage extends StatelessWidget {
+class AnimeInfoPage extends StatefulWidget {
   final AnimeModel anime;
 
-  AnimeInfoPage(this.anime, {Key? key}) : super(key: key);
+  const AnimeInfoPage(this.anime, {Key? key}) : super(key: key);
+
+  @override
+  State<AnimeInfoPage> createState() => _AnimeInfoPageState();
+}
+
+class _AnimeInfoPageState extends State<AnimeInfoPage> {
+  late final AnimeInfoStore animeInfostore;
+
+  @override
+  void initState() {
+    super.initState();
+    animeInfostore = context.read<AnimeInfoStore>();
+    animeInfostore.checkAlreadyRegisteredAnime(widget.anime.malId ?? -100);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance?.addPostFrameCallback(
+      (_) => animeInfostore.onDispose(),
+    );
+    super.dispose();
+  }
 
   final translator = GoogleTranslator();
 
   Future<String> translateText(String inputText) async {
-    var result = await translator.translate(
-      inputText,
-      from: 'en',
-      to: 'pt',
-    );
-    return result.text;
+    try {
+      var result = await translator.translate(
+        inputText,
+        from: 'en',
+        to: 'pt',
+      );
+      return result.text;
+    } catch (e) {
+      return inputText;
+    }
   }
 
   TextStyle styleText = const TextStyle(color: Colors.white);
+
   formatedText(value) => Padding(
         padding: const EdgeInsets.only(top: 10),
         child: Text(
@@ -38,14 +65,17 @@ class AnimeInfoPage extends StatelessWidget {
     final animeInfostate = animeInfostore.value;
 
     var size = MediaQuery.of(context).size;
-    final animeImage = anime.images!.jpg!.largeImageUrl;
+    final animeImage = widget.anime.images!.jpg!.largeImageUrl;
 
     return Scaffold(
       backgroundColor: Colors.blue,
       appBar: AppBar(
         title: Center(
           child: Text(
-            anime.title ?? anime.titleEnglish ?? anime.titleJapanese ?? "",
+            widget.anime.title ??
+                widget.anime.titleEnglish ??
+                widget.anime.titleJapanese ??
+                "",
           ),
         ),
       ),
@@ -72,6 +102,9 @@ class AnimeInfoPage extends StatelessWidget {
               if (animeInfostate is SucessAnimeInfoState) ...{
                 formatedText("Esse anime acabou de ser registrado :)"),
               },
+              if (animeInfostate is AnimeAlreadyRegistered) ...{
+                formatedText("Esse já foi registrado!"),
+              },
               if (animeInfostate is LoadingAnimeInfoState) ...{
                 formatedText("Estamos salvando seu anime..."),
               },
@@ -86,7 +119,7 @@ class AnimeInfoPage extends StatelessWidget {
                   child: CommonWidgets.buttonDefault(
                     "Ei, eu já assisti Esse Anime".toUpperCase(),
                     callback: () => animeInfostore.registerAnimesLocalStorage(
-                      anime,
+                      widget.anime,
                     ),
                   ),
                 ),
@@ -100,15 +133,15 @@ class AnimeInfoPage extends StatelessWidget {
                             Icons.star_rate,
                             color: Colors.yellow,
                           ),
-                          formatedText("${anime.score ?? 0}"),
+                          formatedText("${widget.anime.score ?? 0}"),
                         ]),
                   ],
                 ),
-                formatedText("Status: ${anime.status}"),
-                formatedText("Tipo: ${anime.type}"),
-                formatedText("Duração: ${anime.duration}"),
+                formatedText("Status: ${widget.anime.status}"),
+                formatedText("Tipo: ${widget.anime.type}"),
+                formatedText("Duração: ${widget.anime.duration}"),
                 FutureBuilder(
-                  future: translateText(anime.synopsis ?? ""),
+                  future: translateText(widget.anime.synopsis ?? ""),
                   builder: (BuildContext context, AsyncSnapshot<String> text) {
                     return formatedText(
                       "Sinopse: ${text.data}",
@@ -116,7 +149,7 @@ class AnimeInfoPage extends StatelessWidget {
                   },
                 ),
                 FutureBuilder(
-                  future: translateText(anime.background ?? ""),
+                  future: translateText(widget.anime.background ?? ""),
                   builder: (BuildContext context, AsyncSnapshot<String> text) {
                     return formatedText(
                       "Status: ${text.data}",

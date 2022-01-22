@@ -61,7 +61,10 @@ class _AnimePageState extends State<AnimePage> {
 
   Widget listAnimes(AnimeState state) {
     if (state is LoadingAnimeState) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+          child: CircularProgressIndicator(
+        color: Colors.orange,
+      ));
     }
 
     if (state is ErrorAnimeState) {

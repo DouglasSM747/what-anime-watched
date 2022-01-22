@@ -1,29 +1,50 @@
+import 'dart:convert';
+
 import 'package:flutter_valuenotifier/src/features/animes/models/anime_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AnimeLocalStorageService {
   //! Não consigo utilziar o sharedpreferences no provider
-  late SharedPreferences sharedPreferences;
+  late SharedPreferences _sharedPreferences;
 
-  AnimeLocalStorageService() {
-    SharedPreferences.getInstance().then((value) {
-      sharedPreferences = value;
-    });
-  }
+  AnimeLocalStorageService();
 
   Future<List<AnimeModel>> fetchAnimesLocalStorage() async {
-    var animes = sharedPreferences.getStringList('listAnimes');
-    final list = animes as List;
-    return list.map((anime) => AnimeModel.fromJson(anime)).toList();
+    _sharedPreferences = await SharedPreferences.getInstance();
+    var animes = _sharedPreferences.getStringList('listAnimes');
+    if (animes == null) {
+      return List.empty();
+    }
+
+    return animes.map((anime) {
+      return AnimeModel.fromJson(Map.from(json.decode(anime)));
+    }).toList();
   }
 
-  Future<void> registerAnimesLocalStorage(AnimeModel newAnime) async {
-    if (sharedPreferences.getStringList('listAnimes') == null) {
-      sharedPreferences.setStringList('listAnimes', []);
+  Future<bool> isAnimeRegistedInStorage(int idAnime) async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+    bool isNullList = _sharedPreferences.getStringList('listAnimes') == null;
+    print(isNullList);
+    if (!isNullList) {
+      List<AnimeModel> listAnimes = await fetchAnimesLocalStorage();
+      print(listAnimes);
+      for (AnimeModel anime in listAnimes) {
+        if (anime.malId == idAnime) {
+          return true;
+        }
+      }
     }
-    var animes = sharedPreferences.getStringList('listAnimes');
+    return false;
+  }
+
+  registerAnimesLocalStorage(AnimeModel newAnime) async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+    if (_sharedPreferences.getStringList('listAnimes') == null) {
+      _sharedPreferences.setStringList('listAnimes', []);
+    }
+    var animes = _sharedPreferences.getStringList('listAnimes');
     final list = animes as List<String>;
-    list.add(newAnime.toJson().toString());
-    sharedPreferences.setStringList('listAnimes', list);
+    list.add(jsonEncode(newAnime));
+    _sharedPreferences.setStringList('listAnimes', list);
   }
 }

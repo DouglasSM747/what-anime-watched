@@ -11,3 +11,5 @@ class ErrorAnimeInfoState implements AnimeInfoState {
 }
 
 class LoadingAnimeInfoState implements AnimeInfoState {}
+
+class AnimeAlreadyRegistered implements AnimeInfoState {}

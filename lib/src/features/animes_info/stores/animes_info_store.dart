@@ -4,20 +4,32 @@ import 'package:flutter_valuenotifier/src/features/animes_info/states/animes_inf
 import 'package:flutter_valuenotifier/src/shareds/services/animes_local_storage.dart';
 
 class AnimeInfoStore extends ValueNotifier<AnimeInfoState> {
-  final AnimeLocalStorageService animeLocalStorageService;
+  final AnimeLocalStorageService _animeLocalStorageService;
 
-  AnimeInfoStore(this.animeLocalStorageService)
+  AnimeInfoStore(this._animeLocalStorageService)
       : super(
           InitialAnimeInfoState(),
         );
 
+  checkAlreadyRegisteredAnime(int idAnime) async {
+    debugPrint(idAnime.toString());
+    bool res = await _animeLocalStorageService.isAnimeRegistedInStorage(
+      idAnime,
+    );
+    res ? value = AnimeAlreadyRegistered() : value = InitialAnimeInfoState();
+  }
+
   Future registerAnimesLocalStorage(AnimeModel newAnime) async {
     value = LoadingAnimeInfoState();
     try {
-      await animeLocalStorageService.registerAnimesLocalStorage(newAnime);
+      await _animeLocalStorageService.registerAnimesLocalStorage(newAnime);
       value = SucessAnimeInfoState();
     } catch (error) {
       value = ErrorAnimeInfoState(error.toString());
     }
+  }
+
+  onDispose() {
+    value = InitialAnimeInfoState();
   }
 }
