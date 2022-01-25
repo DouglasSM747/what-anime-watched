@@ -16,4 +16,16 @@ class MyAnimeStore extends ValueNotifier<MyAnimeState> {
       value = ErrorMyAnimeState(error.toString());
     }
   }
+
+  Future removeAnime(int idAnime) async {
+    value = LoadingMyAnimeState();
+    try {
+      await animeService.removeAnimeLocalStorage(idAnime);
+      final animes = await animeService.fetchAnimesLocalStorage();
+      print(animes.length);
+      value = SucessMyAnimeState(animes);
+    } catch (error) {
+      value = ErrorMyAnimeState(error.toString());
+    }
+  }
 }

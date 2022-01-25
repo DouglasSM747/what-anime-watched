@@ -24,10 +24,8 @@ class AnimeLocalStorageService {
   Future<bool> isAnimeRegistedInStorage(int idAnime) async {
     _sharedPreferences = await SharedPreferences.getInstance();
     bool isNullList = _sharedPreferences.getStringList('listAnimes') == null;
-    print(isNullList);
     if (!isNullList) {
       List<AnimeModel> listAnimes = await fetchAnimesLocalStorage();
-      print(listAnimes);
       for (AnimeModel anime in listAnimes) {
         if (anime.malId == idAnime) {
           return true;
@@ -35,6 +33,17 @@ class AnimeLocalStorageService {
       }
     }
     return false;
+  }
+
+  removeAnimeLocalStorage(int idAnime) async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+    List<AnimeModel> listAnimes = await fetchAnimesLocalStorage();
+    listAnimes.removeWhere((element) => element.malId == idAnime);
+    List<String> list = List.generate(
+      listAnimes.length,
+      (index) => jsonEncode(listAnimes[index]),
+    );
+    _sharedPreferences.setStringList('listAnimes', list);
   }
 
   registerAnimesLocalStorage(AnimeModel newAnime) async {

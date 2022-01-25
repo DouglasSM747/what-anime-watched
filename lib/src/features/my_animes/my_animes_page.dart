@@ -42,12 +42,15 @@ class _MyAnimesPageState extends State<MyAnimesPage> {
       body: SizedBox(
         width: size.width,
         height: size.height,
-        child: listAnimes(myAnimeState),
+        child: listAnimes(myAnimeState, myAnimeStore),
       ),
     );
   }
 
-  Widget listAnimes(MyAnimeState myAnimeState) {
+  Widget listAnimes(
+    MyAnimeState myAnimeState,
+    MyAnimeStore store,
+  ) {
     if (myAnimeState is SucessMyAnimeState) {
       return ListView.builder(
           itemCount: myAnimeState.listAnimes.length,
@@ -56,6 +59,13 @@ class _MyAnimesPageState extends State<MyAnimesPage> {
 
             return ListTile(
               title: Text(anime.title ?? ""),
+              trailing: IconButton(
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+                onPressed: () => store.removeAnime(anime.malId ?? -100),
+              ),
               subtitle: Text("${anime.malId ?? -100}"),
               leading: Image.network(
                 anime.images?.jpg?.smallImageUrl ??
